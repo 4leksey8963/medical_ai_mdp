@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <title>Лабораторные показатели</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --secondary: #7c3aed;
+      --success: #10b981;
+      --danger: #ef4444;
+      --text: #1f2937;
+      --text-light: #6b7280;
+      --bg: #f3f4f6;
+      --white: #ffffff;
+      --gray-light: #f9fafb;
+      --gray-medium: #e5e7eb;
+      --gray-dark: #d1d5db;
+      --radius: 0.75rem; /* Уменьшил радиус для более компактного вида */
+      --transition: 0.2s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px; /* Базовый размер шрифта */
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color, var(--bg)); /* Telegram может передавать цвет фона */
+      color: var(--text-color, var(--text)); /* Telegram может передавать цвет текста */
+      min-height: 100vh;
+      padding: 15px; /* Небольшой отступ для всей страницы */
+      overscroll-behavior-y: contain; /* Предотвращение "отскока" страницы при скролле */
+    }
+
+    .container {
+      background: var(--section-bg-color, var(--white)); /* Цвет фона секции от Telegram */
+      max-width: 800px;
+      width: 100%;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      margin: 0 auto; /* Центрирование контейнера */
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: var(--white);
+      text-align: center;
+      padding: 20px;
+    }
+
+    .header h1 {
+      font-size: 1.5rem; /* Немного уменьшил */
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .header p {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    form {
+      padding: 20px;
+    }
+
+    .form-section {
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--gray-medium);
+    }
+    .form-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .form-section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: 15px;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-color, var(--text-light));
+      margin-bottom: 0.375rem;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 0.625rem 0.875rem; /* Немного уменьшил паддинги */
+      font-size: 1rem;
+      border: 1px solid var(--gray-dark);
+      background-color: var(--section-bg-color, var(--white));
+      color: var(--text-color, var(--text));
+      border-radius: calc(var(--radius) / 2); /* Меньший радиус для полей */
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      -webkit-appearance: none; /* Убираем стандартный вид для iOS */
+      -moz-appearance: none;
+      appearance: none;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.25); /* Тень при фокусе */
+    }
+    
+    /* Кнопка для скачивания JSON (для отладки) */
+    #manualSaveButton {
+      display: block; /* По умолчанию блочная */
+      margin: 20px auto; /* Центрирование и отступы */
+      padding: 10px 20px;
+      background-color: var(--secondary);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    #manualSaveButton:hover {
+        background-color: var(--primary);
+    }
+
+
+    /* Если главная кнопка WebApp не отображается, можно стилизовать свою */
+    .custom-main-button {
+        display: block;
+        width: calc(100% - 40px); /* С учетом отступов формы */
+        margin: 20px auto; /* Центрирование */
+        background: linear-gradient(to right, var(--primary), var(--secondary));
+        color: white;
+        font-size: 1rem;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: var(--radius);
+        cursor: pointer;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: all var(--transition);
+    }
+    .custom-main-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+    .custom-main-button:disabled {
+        background: var(--gray-medium);
+        color: var(--text-light);
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+
+    .saved-data {
+      border-top: 1px solid var(--gray-medium);
+      padding: 20px;
+      background-color: var(--gray-light);
+    }
+
+    .saved-data h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 1rem;
+    }
+
+    .json-output {
+      background-color: var(--section-bg-color, var(--white));
+      border: 1px solid var(--gray-dark);
+      padding: 0.75rem;
+      border-radius: calc(var(--radius) / 2);
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 0.8rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--text-color, var(--text));
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>Лабораторные показатели</h1>
+      <p>Введите результаты анализов. Оставляйте поля пустыми, если данных нет.</p>
+    </div>
+
+    <form id="labForm">
+      <!-- Динамические поля будут добавлены JS -->
+    </form>
+    
+    <button type="button" id="manualSaveButton" onclick="manualSaveData()">Сохранить и скачать JSON (для отладки)</button>
+    
+    <!-- Этот блок для случая, если MainButton не видна и мы хотим свою -->
+    <div id="customMainButtonContainer" style="display: none;">
+        <button type="button" id="customSubmitButton" class="custom-main-button" disabled>Сохранить и отправить данные</button>
+    </div>
+
+
+    <div id="savedDataContainer" class="saved-data" style="display: none;">
+      <h2>Сформированные данные (JSON):</h2>
+      <pre id="jsonDataOutput" class="json-output"></pre>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+
+    // Список показателей сгруппирован для лучшего отображения
+    const indicatorGroups = [
+        {
+            title: "Эритроцитарные параметры",
+            indicators: [
+                { key: "hemoglobin", name: "Гемоглобин (Hb)", unit: "г/л", type: "text" },
+                { key: "rbc", name: "Эритроциты (RBC)", unit: "10^12/л", type: "text" },
+                { key: "hematocrit", name: "Гематокрит (HCT)", unit: "%", type: "text" },
+                { key: "mcv", name: "Средний объем эритроцита (MCV)", unit: "фл", type: "text" },
+                { key: "mch", name: "Среднее содержание Hb в эритроците (MCH)", unit: "пг", type: "text" },
+                { key: "mchc", name: "Средняя концентрация Hb в эритроците (MCHC)", unit: "г/л", type: "text" },
+                { key: "rdw_cv", name: "Гетерогенность эритроцитов (RDW-CV)", unit: "%", type: "text" },
+                { key: "rdw_sd", name: "Гетерогенность эритроцитов (RDW-SD)", unit: "фл", type: "text" },
+                { key: "nrbc_abs", name: "Нормобласты (NRBC абс.)", unit: "10^9/л", type: "text" },
+                { key: "nrbc_pct", name: "Нормобласты (NRBC %)", unit: "%", type: "text" },
+                { key: "macrocytes_pct", name: "Макроциты (MacroR)", unit: "%", type: "text" },
+                { key: "microcytes_pct", name: "Микроциты (MicroR)", unit: "%", type: "text" },
+                { key: "color_index", name: "Цветовой показатель", unit: "", type: "text" },
+            ]
+        },
+        {
+            title: "Тромбоцитарные параметры",
+            indicators: [
+                { key: "plt", name: "Тромбоциты (PLT)", unit: "10^9/л", type: "text" },
+                { key: "pct", name: "Тромбокрит (PCT)", unit: "%", type: "text" },
+                { key: "mpv", name: "Средний объем тромбоцитов (MPV)", unit: "фл", type: "text" },
+                { key: "pdw", name: "Гетерогенность тромбоцитов (PDW)", unit: "фл", type: "text" },
+                { key: "p_lcr", name: "Коэффициент крупных тромбоцитов (P-LCR)", unit: "%", type: "text" },
+            ]
+        },
+        {
+            title: "Лейкоцитарные параметры",
+            indicators: [
+                { key: "wbc", name: "Лейкоциты (WBC)", unit: "10^9/л", type: "text" },
+                { key: "neutrophils_abs", name: "Нейтрофилы (NEU абс.)", unit: "10^9/л", type: "text" },
+                { key: "neutrophils_pct", name: "Нейтрофилы (NEU %)", unit: "%", type: "text" },
+                { key: "band_neutrophils_abs", name: "Палочкоядерные (абс.)", unit: "10^9/л", type: "text" },
+                { key: "band_neutrophils_pct", name: "Палочкоядерные (%)", unit: "%", type: "text" },
+                { key: "seg_neutrophils_abs", name: "Сегментоядерные (абс.)", unit: "10^9/л", type: "text" },
+                { key: "seg_neutrophils_pct", name: "Сегментоядерные (%)", unit: "%", type: "text" },
+                { key: "eosinophils_abs", name: "Эозинофилы (EOS абс.)", unit: "10^9/л", type: "text" },
+                { key: "eosinophils_pct", name: "Эозинофилы (EOS %)", unit: "%", type: "text" },
+                { key: "basophils_abs", name: "Базофилы (BAS абс.)", unit: "10^9/л", type: "text" },
+                { key: "basophils_pct", name: "Базофилы (BAS %)", unit: "%", type: "text" },
+                { key: "monocytes_abs", name: "Моноциты (MON абс.)", unit: "10^9/л", type: "text" },
+                { key: "monocytes_pct", name: "Моноциты (MON %)", unit: "%", type: "text" },
+                { key: "lymphocytes_abs", name: "Лимфоциты (LYM абс.)", unit: "10^9/л", type: "text" },
+                { key: "lymphocytes_pct", name: "Лимфоциты (LYM %)", unit: "%", type: "text" },
+                { key: "ig_abs", name: "Незрелые гранулоциты (IG абс.)", unit: "10^9/л", type: "text" },
+                { key: "ig_pct", name: "Незрелые гранулоциты (IG %)", unit: "%", type: "text" },
+                { key: "re_lymp_abs", name: "Реактивные лимфоциты (RE-LYMP абс.)", unit: "10^9/л", type: "text" },
+                { key: "re_lymp_pct", name: "Реактивные лимфоциты (RE-LYMP %)", unit: "%", type: "text" },
+                { key: "as_lymp_abs", name: "Плазматические клетки (AS-LYMP абс.)", unit: "10^9/л", type: "text" },
+                { key: "as_lymp_pct", name: "Плазматические клетки (AS-LYMP %)", unit: "%", type: "text" },
+                { key: "neut_ri", name: "Интенсивность реактивности нейтрофилов (NEUT-RI)", unit: "SI", type: "text" },
+                { key: "neut_gi", name: "Показатель гранулярности нейтрофилов (NEUT-GI)", unit: "SI", type: "text" },
+            ]
+        },
+        {
+            title: "Скорость оседания эритроцитов",
+            indicators: [
+                { key: "esr", name: "СОЭ (по Вестергрену)", unit: "мм/ч", type: "text" },
+            ]
+        },
+        // Можно добавить группы для Биохимии и ОАМ по аналогии
+        // {
+        //     title: "Биохимический анализ крови",
+        //     indicators: [
+        //         { key: "glucose", name: "Глюкоза", unit: "ммоль/л", type: "text" },
+        //         // ...
+        //     ]
+        // },
+    ];
+
+    const form = document.getElementById("labForm");
+    const savedDataContainer = document.getElementById("savedDataContainer");
+    const jsonDataOutput = document.getElementById("jsonDataOutput");
+    const manualSaveButton = document.getElementById("manualSaveButton");
+    const customSubmitButton = document.getElementById("customSubmitButton");
+    const customMainButtonContainer = document.getElementById("customMainButtonContainer");
+
+    let isTgWebApp = false;
+
+    function updateMainButtonState() {
+        if (!isTgWebApp) return; // Работаем только если это WebApp
+        const currentFormData = getFormDataInternal();
+        if (currentFormData) {
+            tg.MainButton.setParams({is_active: true, color: tg.themeParams.button_color || '#2481CC'});
+            if (customSubmitButton) customSubmitButton.disabled = false;
+        } else {
+            tg.MainButton.setParams({is_active: false, color: tg.themeParams.secondary_bg_color || '#E0E0E0'});
+            if (customSubmitButton) customSubmitButton.disabled = true;
+        }
+    }
+    
+    function generateFormFields() {
+        indicatorGroups.forEach(group => {
+            const section = document.createElement("div");
+            section.className = "form-section";
+
+            const title = document.createElement("h2");
+            title.className = "form-section-title";
+            title.textContent = group.title;
+            section.appendChild(title);
+
+            group.indicators.forEach(({ key, name, unit, type }) => {
+                const formGroup = document.createElement("div");
+                formGroup.className = "form-group";
+
+                const label = document.createElement("label");
+                label.setAttribute("for", key);
+                label.textContent = unit ? `${name} (${unit})` : name;
+
+                const input = document.createElement("input");
+                input.type = type || "text";
+                input.id = key;
+                input.name = key;
+                input.placeholder = "Введите значение...";
+                if (type === "number") {
+                    input.step = "any";
+                }
+                input.addEventListener('input', updateMainButtonState);
+
+                formGroup.appendChild(label);
+                formGroup.appendChild(input);
+                section.appendChild(formGroup);
+            });
+            form.appendChild(section);
+        });
+    }
+    
+    function getFormDataInternal() { // Внутренняя функция без alert
+        const formData = {};
+        let hasValue = false;
+        indicatorGroups.forEach(group => {
+            group.indicators.forEach(({ key }) => {
+                const inputElement = document.querySelector(`[name="${key}"]`);
+                if (inputElement) { // Добавил проверку на существование элемента
+                    const value = inputElement.value.trim();
+                    if (value !== "") {
+                        formData[key] = value;
+                        hasValue = true;
+                    }
+                }
+            });
+        });
+        return hasValue ? formData : null;
+    }
+
+    function manualSaveData() { // Для кнопки отладки
+        const currentFormData = getFormDataInternal();
+        if (!currentFormData) {
+            alert("Пожалуйста, заполните хотя бы одно поле.");
+            return;
+        }
+        jsonDataOutput.textContent = JSON.stringify(currentFormData, null, 2);
+        savedDataContainer.style.display = "block";
+
+        const jsonData = JSON.stringify(currentFormData, null, 2);
+        const blob = new Blob([jsonData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'analysis_data_manual.json'; 
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // ----- Инициализация Telegram WebApp -----
+    try {
+        tg.ready();
+        isTgWebApp = true; 
+        tg.expand(); // Раскрываем WebApp на весь экран, если возможно
+
+        // Применение темы Telegram
+        document.body.style.backgroundColor = tg.themeParams.bg_color || 'var(--bg)';
+        document.body.style.color = tg.themeParams.text_color || 'var(--text)';
+        // Можно также обновить CSS переменные, если нужно более глубокое управление темой
+        // document.documentElement.style.setProperty('--bg-color', tg.themeParams.bg_color);
+        // document.documentElement.style.setProperty('--text-color', tg.themeParams.text_color);
+        // ... и так далее для других переменных ...
+
+        tg.MainButton.setText("Сохранить и отправить данные");
+        tg.MainButton.setParams({
+            is_visible: true, 
+            is_active: false, // Изначально неактивна
+            // textColor: tg.themeParams.button_text_color || '#FFFFFF', // Можно задать явно
+            // color: tg.themeParams.secondary_bg_color || '#E0E0E0' // Цвет неактивной кнопки
+        });
+
+        tg.MainButton.onClick(() => {
+            const currentFormData = getFormDataInternal();
+            if (currentFormData) {
+                jsonDataOutput.textContent = JSON.stringify(currentFormData, null, 2); // Показать для пользователя
+                savedDataContainer.style.display = "block"; // Показать контейнер с JSON
+                
+                tg.sendData(JSON.stringify(currentFormData));
+                // tg.close(); // Можно закрыть после отправки, если это конечное действие
+            } else {
+                tg.showAlert("Пожалуйста, заполните хотя бы одно поле, чтобы сохранить данные.");
+            }
+        });
+        
+        // Скрываем кнопку ручного сохранения, если мы в Telegram
+        if (manualSaveButton) manualSaveButton.style.display = 'none';
+        if (customSubmitButton) customSubmitButton.removeEventListener('click', manualSendDataViaTg); // Удаляем старый обработчик, если был
+        if (customSubmitButton) customSubmitButton.addEventListener('click', () => tg.MainButton.onClick()); // Делаем ее триггером для MainButton
+
+         // Если MainButton почему-то не видна (старые клиенты или баги)
+        if (!tg.MainButton.isVisible && customMainButtonContainer && customSubmitButton) {
+            customMainButtonContainer.style.display = 'block';
+            customSubmitButton.disabled = true; // Изначально неактивна
+        }
+
+
+    } catch (e) {
+        console.error("Telegram WebApp API not available or error during initialization.", e);
+        // Показываем кнопку ручного сохранения, если WebApp API недоступно (например, открыто в обычном браузере)
+        if (manualSaveButton) manualSaveButton.style.display = 'block';
+        if (customMainButtonContainer) customMainButtonContainer.style.display = 'none';
+    }
+    // ----- Конец инициализации Telegram WebApp -----
+    
+    generateFormFields(); // Генерируем поля формы в любом случае
+    updateMainButtonState(); // Устанавливаем начальное состояние кнопки
+
+    // Функция для отправки данных через кастомную кнопку (если MainButton не видна)
+    function manualSendDataViaTg() {
+        if (isTgWebApp) {
+            tg.MainButton.onClick(); // Просто вызываем обработчик главной кнопки
+        } else {
+            manualSaveData(); // Если не WebApp, то просто скачиваем файл
+        }
+    }
+    if (customSubmitButton && !tg.MainButton.isVisible && isTgWebApp) { // Добавляем обработчик только если MainButton не видна
+        customSubmitButton.addEventListener('click', manualSendDataViaTg);
+    } else if (customSubmitButton && !isTgWebApp) { // Если вообще не WebApp, то пусть кастомная кнопка сохраняет локально
+         customSubmitButton.addEventListener('click', manualSaveData);
+         customMainButtonContainer.style.display = 'block'; // Показываем ее
+         customSubmitButton.disabled = true; // Начальное состояние
+    }
+
+
+    // Предзаполнение формы (если данные переданы через start_param)
+    // Это для случая, когда вы хотите реализовать редактирование через WebApp
+    if (isTgWebApp && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
+       try {
+           // Предполагаем, что start_param - это URL-кодированный JSON строка
+           const initialData = JSON.parse(decodeURIComponent(tg.initDataUnsafe.start_param));
+           indicatorGroups.forEach(group => {
+               group.indicators.forEach(({ key }) => {
+                    if (initialData[key] !== undefined) {
+                        const inputElement = document.querySelector(`[name="${key}"]`);
+                        if (inputElement) {
+                            inputElement.value = initialData[key];
+                        }
+                    }
+               });
+           });
+           updateMainButtonState(); // Обновить состояние кнопки, если данные были предзаполнены
+           tg.MainButton.setParams({ text: "Обновить и отправить данные" }); // Меняем текст кнопки, если это редактирование
+       } catch (e) { 
+           console.error("Error parsing or applying start_param data:", e); 
+           tg.showAlert("Не удалось загрузить данные для редактирования. Ошибка: " + e.message);
+       }
+    }
+
+  </script>
+
+</body>
+</html>
