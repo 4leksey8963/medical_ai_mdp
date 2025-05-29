@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>Лабораторные показатели</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --primary-color: #4f46e5; /* Яркий сине-фиолетовый */
+      --secondary-color: #7c3aed; /* Фиолетовый */
+      --text-color-main: #1f2937; /* Темно-серый для основного текста */
+      --text-color-light: #6b7280; /* Светло-серый для подсказок/лейблов */
+      --bg-color-page: #f3f4f6;    /* Светло-серый фон страницы */
+      --bg-color-container: #ffffff; /* Белый фон контейнера */
+      --border-color: #d1d5db;   /* Серый для границ */
+      --border-radius-main: 0.75rem;
+      --border-radius-input: 0.375rem; /* Чуть меньше для инпутов */
+      --transition-speed: 0.2s;
+      
+      /* Переменные, которые может установить Telegram */
+      --tg-theme-bg-color: var(--bg-color-page);
+      --tg-theme-text-color: var(--text-color-main);
+      --tg-theme-hint-color: var(--text-color-light);
+      --tg-theme-link-color: var(--primary-color);
+      --tg-theme-button-color: var(--primary-color);
+      --tg-theme-button-text-color: #ffffff;
+      --tg-theme-secondary-bg-color: var(--bg-color-container);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--tg-theme-bg-color);
+      color: var(--tg-theme-text-color);
+      min-height: 100vh;
+      display: flex; 
+      justify-content: center; 
+      overscroll-behavior-y: contain;
+      -webkit-tap-highlight-color: transparent; 
+    }
+
+    .container {
+      background: var(--tg-theme-secondary-bg-color);
+      max-width: 800px; 
+      width: 100%;      
+      min-height: 100vh; 
+      display: flex;
+      flex-direction: column;
+      padding: 15px; /* Добавим общий padding для контейнера */
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: var(--tg-theme-button-text-color); 
+      text-align: center;
+      padding: 20px 15px; 
+      flex-shrink: 0;
+      border-radius: var(--border-radius-main) var(--border-radius-main) 0 0; /* Скругляем только верхние углы, если контейнер не на весь экран */
+    }
+    
+    .container > .header { /* Если header прямой потомок container с padding */
+        margin: -15px -15px 0 -15px; /* Компенсируем padding контейнера */
+        border-radius: 0; /* Убираем радиус если шапка растягивается */
+    }
+
+
+    .header h1 {
+      font-size: 1.4rem; 
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .header p {
+      font-size: 0.85rem; 
+      opacity: 0.9;
+    }
+
+    form {
+      padding: 20px 0; /* Убираем боковые отступы, если они у контейнера */
+      flex-grow: 1; 
+      overflow-y: auto; 
+    }
+
+    .form-section {
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--tg-theme-hint-color);
+    }
+    .form-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .form-section-title {
+        font-size: 1.05rem; 
+        font-weight: 600;
+        color: var(--tg-theme-link-color);
+        margin-bottom: 12px;
+    }
+
+    .form-group {
+      margin-bottom: 0.875rem; 
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem; 
+      font-weight: 500;
+      color: var(--tg-theme-hint-color);
+      margin-bottom: 0.25rem; 
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 12px; 
+      font-size: 0.9375rem; 
+      border: 1px solid var(--tg-theme-hint-color); 
+      background-color: var(--tg-theme-bg-color); 
+      color: var(--tg-theme-text-color); 
+      border-radius: var(--border-radius-input);
+      outline: none;
+      transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+      -webkit-appearance: none; 
+      -moz-appearance: none;
+      appearance: none;
+    }
+
+    input:focus {
+      border-color: var(--tg-theme-link-color);
+      box-shadow: 0 0 0 2px var(--tg-theme-link-color, rgba(79, 70, 229, 0.25));
+    }
+    
+    #manualSaveButton {
+      display: none; 
+      margin: 20px 0; /* Убрал боковые отступы, если контейнер уже их имеет */
+      padding: 12px 20px;
+      background-color: var(--secondary-color);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius-main);
+      cursor: pointer;
+      font-size: 0.9rem;
+      text-align: center;
+      width: 100%;
+    }
+    #manualSaveButton:hover {
+        background-color: var(--primary-color);
+    }
+    
+    .custom-main-button-container {
+        padding-bottom: 15px; /* Отступ снизу для кнопки */
+        flex-shrink: 0; 
+    }
+    .custom-main-button {
+        display: block; 
+        width: 100%;
+        background: var(--tg-theme-button-color, var(--primary-color));
+        color: var(--tg-theme-button-text-color, #ffffff);
+        font-size: 1rem;
+        font-weight: 600;
+        padding: 12px 20px;
+        border: none;
+        border-radius: var(--border-radius-main);
+        cursor: pointer;
+        text-align: center;
+        transition: opacity var(--transition-speed);
+    }
+    .custom-main-button:disabled {
+        background: var(--tg-theme-secondary-bg-color, var(--gray-medium)); 
+        color: var(--tg-theme-hint-color, var(--text-light));
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>Лабораторные показатели</h1>
+      <p>Введите результаты анализов. Оставляйте поля пустыми, если данных нет.</p>
+    </div>
+
+    <form id="labForm">
+      <!-- Динамические поля будут добавлены JS -->
+    </form>
+    
+    <div id="customMainButtonContainer" style="display: none;"> <!-- Показываем, если MainButton нет -->
+        <button type="button" id="customSubmitButton" class="custom-main-button" disabled>Сохранить и отправить данные</button>
+    </div>
+    
+    <!-- Кнопка для отладки вне Telegram -->
+    <button type="button" id="manualSaveButton" onclick="manualSaveDataForDebug()">Сохранить и скачать JSON (для отладки)</button>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+
+    const indicatorGroups = [
+        {
+            title: "Эритроцитарные параметры",
+            indicators: [
+                { key: "hemoglobin", name: "Гемоглобин (Hb)", unit: "г/л", type: "text" },
+                { key: "rbc", name: "Эритроциты (RBC)", unit: "10^12/л", type: "text" },
+                { key: "hematocrit", name: "Гематокрит (HCT)", unit: "%", type: "text" },
+                { key: "mcv", name: "Средний объем эритроцита (MCV)", unit: "фл", type: "text" },
+                { key: "mch", name: "Среднее содержание Hb в эритроците (MCH)", unit: "пг", type: "text" },
+                { key: "mchc", name: "Средняя концентрация Hb в эритроците (MCHC)", unit: "г/л", type: "text" },
+                { key: "rdw_cv", name: "Гетерогенность эритроцитов (RDW-CV)", unit: "%", type: "text" },
+                { key: "rdw_sd", name: "Гетерогенность эритроцитов (RDW-SD)", unit: "фл", type: "text" },
+                { key: "nrbc_abs", name: "Нормобласты (NRBC абс.)", unit: "10^9/л", type: "text" },
+                { key: "nrbc_pct", name: "Нормобласты (NRBC %)", unit: "%", type: "text" },
+                { key: "macrocytes_pct", name: "Макроциты (MacroR)", unit: "%", type: "text" },
+                { key: "microcytes_pct", name: "Микроциты (MicroR)", unit: "%", type: "text" },
+                { key: "color_index", name: "Цветовой показатель", unit: "", type: "text" },
+            ]
+        },
+        {
+            title: "Тромбоцитарные параметры",
+            indicators: [
+                { key: "plt", name: "Тромбоциты (PLT)", unit: "10^9/л", type: "text" },
+                { key: "pct", name: "Тромбокрит (PCT)", unit: "%", type: "text" },
+                { key: "mpv", name: "Средний объем тромбоцитов (MPV)", unit: "фл", type: "text" },
+                { key: "pdw", name: "Гетерогенность тромбоцитов (PDW)", unit: "фл", type: "text" },
+                { key: "p_lcr", name: "Коэффициент крупных тромбоцитов (P-LCR)", unit: "%", type: "text" },
+            ]
+        },
+        {
+            title: "Лейкоцитарные параметры",
+            indicators: [
+                { key: "wbc", name: "Лейкоциты (WBC)", unit: "10^9/л", type: "text" },
+                { key: "neutrophils_abs", name: "Нейтрофилы (NEU абс.)", unit: "10^9/л", type: "text" },
+                { key: "neutrophils_pct", name: "Нейтрофилы (NEU %)", unit: "%", type: "text" },
+                { key: "band_neutrophils_abs", name: "Палочкоядерные (абс.)", unit: "10^9/л", type: "text" },
+                { key: "band_neutrophils_pct", name: "Палочкоядерные (%)", unit: "%", type: "text" },
+                { key: "seg_neutrophils_abs", name: "Сегментоядерные (абс.)", unit: "10^9/л", type: "text" },
+                { key: "seg_neutrophils_pct", name: "Сегментоядерные (%)", unit: "%", type: "text" },
+                { key: "eosinophils_abs", name: "Эозинофилы (EOS абс.)", unit: "10^9/л", type: "text" },
+                { key: "eosinophils_pct", name: "Эозинофилы (EOS %)", unit: "%", type: "text" },
+                { key: "basophils_abs", name: "Базофилы (BAS абс.)", unit: "10^9/л", type: "text" },
+                { key: "basophils_pct", name: "Базофилы (BAS %)", unit: "%", type: "text" },
+                { key: "monocytes_abs", name: "Моноциты (MON абс.)", unit: "10^9/л", type: "text" },
+                { key: "monocytes_pct", name: "Моноциты (MON %)", unit: "%", type: "text" },
+                { key: "lymphocytes_abs", name: "Лимфоциты (LYM абс.)", unit: "10^9/л", type: "text" },
+                { key: "lymphocytes_pct", name: "Лимфоциты (LYM %)", unit: "%", type: "text" },
+                { key: "ig_abs", name: "Незрелые гранулоциты (IG абс.)", unit: "10^9/л", type: "text" },
+                { key: "ig_pct", name: "Незрелые гранулоциты (IG %)", unit: "%", type: "text" },
+                { key: "re_lymp_abs", name: "Реактивные лимфоциты (RE-LYMP абс.)", unit: "10^9/л", type: "text" },
+                { key: "re_lymp_pct", name: "Реактивные лимфоциты (RE-LYMP %)", unit: "%", type: "text" },
+                { key: "as_lymp_abs", name: "Плазматические клетки (AS-LYMP абс.)", unit: "10^9/л", type: "text" },
+                { key: "as_lymp_pct", name: "Плазматические клетки (AS-LYMP %)", unit: "%", type: "text" },
+                { key: "neut_ri", name: "Интенсивность реактивности нейтрофилов (NEUT-RI)", unit: "SI", type: "text" },
+                { key: "neut_gi", name: "Показатель гранулярности нейтрофилов (NEUT-GI)", unit: "SI", type: "text" },
+            ]
+        },
+        {
+            title: "Скорость оседания эритроцитов",
+            indicators: [
+                { key: "esr", name: "СОЭ (по Вестергрену)", unit: "мм/ч", type: "text" },
+            ]
+        }
+    ];
+
+    const form = document.getElementById("labForm");
+    const manualSaveButton = document.getElementById("manualSaveButton");
+    const customSubmitButton = document.getElementById("customSubmitButton");
+    const customMainButtonContainer = document.getElementById("customMainButtonContainer");
+
+    let isTgWebApp = false;
+    let mainButtonHandler = null; 
+
+    function updateMainButtonState() {
+        if (!isTgWebApp || !tg.MainButton) return; 
+        const currentFormData = getFormDataInternal();
+        const isActive = !!currentFormData; 
+        try {
+            tg.MainButton.setParams({
+                is_active: isActive, 
+                color: isActive ? (tg.themeParams.button_color || '#4F46E5') : (tg.themeParams.secondary_bg_color || '#E0E0E0'),
+                text_color: isActive ? (tg.themeParams.button_text_color || '#FFFFFF') : (tg.themeParams.hint_color || '#9E9E9E')
+            });
+        } catch(e) { console.error("JS Error: setting MainButton params:", e); }
+        if (customSubmitButton) customSubmitButton.disabled = !isActive;
+    }
+    
+    function generateFormFields() {
+        indicatorGroups.forEach(group => {
+            const section = document.createElement("div");
+            section.className = "form-section";
+            const title = document.createElement("h2");
+            title.className = "form-section-title";
+            title.textContent = group.title;
+            section.appendChild(title);
+            group.indicators.forEach(({ key, name, unit, type }) => {
+                const formGroup = document.createElement("div");
+                formGroup.className = "form-group";
+                const label = document.createElement("label");
+                label.setAttribute("for", key);
+                label.textContent = unit ? `${name} (${unit})` : name;
+                const input = document.createElement("input");
+                input.type = type || "text";
+                input.id = key;
+                input.name = key;
+                input.placeholder = "Введите значение...";
+                if (type === "number") input.step = "any";
+                input.addEventListener('input', updateMainButtonState);
+                formGroup.appendChild(label);
+                formGroup.appendChild(input);
+                section.appendChild(formGroup);
+            });
+            form.appendChild(section);
+        });
+    }
+    
+    function getFormDataInternal() {
+        const formData = {};
+        let hasValue = false;
+        indicatorGroups.forEach(group => {
+            group.indicators.forEach(({ key }) => {
+                const inputElement = document.querySelector(`[name="${key}"]`);
+                if (inputElement) { 
+                    const value = inputElement.value.trim();
+                    if (value !== "") { formData[key] = value; hasValue = true; }
+                }
+            });
+        });
+        return hasValue ? formData : null;
+    }
+
+    function manualSaveDataForDebug() { 
+        const currentFormData = getFormDataInternal();
+        if (!currentFormData) {
+            alert("Пожалуйста, заполните хотя бы одно поле.");
+            return;
+        }
+        console.log("Manual Save Data (for debug):", currentFormData);
+        const jsonData = JSON.stringify(currentFormData, null, 2);
+        const blob = new Blob([jsonData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'analysis_data_manual_debug.json'; 
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        alert("JSON файл 'analysis_data_manual_debug.json' скачан (для отладки).");
+    }
+
+    function initializeApp() {
+        console.log("JS: initializeApp called");
+        generateFormFields(); 
+
+        try {
+            if (tg && typeof tg.ready === 'function' && tg.initData !== undefined) {
+                isTgWebApp = true; 
+                console.log("JS: Telegram WebApp context detected. Initializing...");
+                tg.ready();
+                tg.expand();
+
+                document.body.style.backgroundColor = tg.themeParams.bg_color || 'var(--bg-color-page)';
+                document.body.style.color = tg.themeParams.text_color || 'var(--text-color-main)';
+                
+                console.log("JS: Setting up MainButton");
+                tg.MainButton.setText("Сохранить и отправить");
+                tg.MainButton.show(); 
+                updateMainButtonState(); 
+                
+                if (mainButtonHandler && typeof tg.offEvent === 'function') {
+                    tg.offEvent('mainButtonClicked', mainButtonHandler);
+                    console.log("JS: Previous MainButton handler removed.");
+                }
+                mainButtonHandler = () => { 
+                    console.log("JS: MainButton clicked!");
+                    const currentFormData = getFormDataInternal();
+                    console.log("JS: Form data to send:", currentFormData);
+                    if (currentFormData) {
+                        try {
+                            const jsonDataString = JSON.stringify(currentFormData);
+                            console.log("JS: Sending data string:", jsonDataString);
+                            tg.sendData(jsonDataString);
+                            console.log("JS: Data supposedly sent via tg.sendData(). Attempting to close WebApp.");
+                            tg.close(); // <-- РАСКОММЕНТИРОВАНО ДЛЯ ТЕСТА ЗАКРЫТИЯ
+                        } catch (e) {
+                            console.error("JS Error: sending data via tg.sendData() or closing:", e);
+                            tg.showAlert("Ошибка при отправке или закрытии: " + e.message + ". Попробуйте еще раз.");
+                        }
+                    } else { 
+                        console.log("JS: No data to send. Showing alert.");
+                        tg.showAlert("Пожалуйста, заполните хотя бы одно поле, чтобы сохранить данные.");
+                    }
+                };
+                tg.onEvent('mainButtonClicked', mainButtonHandler);
+                console.log("JS: MainButton handler attached.");
+                
+                if (manualSaveButton) manualSaveButton.style.display = 'none';
+                if (customMainButtonContainer) customMainButtonContainer.style.display = 'none';
+
+            } else {
+                console.log("JS: Not in Telegram WebApp context. Manual save button will be shown.");
+                if (manualSaveButton) manualSaveButton.style.display = 'block';
+                if (customMainButtonContainer) customMainButtonContainer.style.display = 'none';
+            }
+        } catch (e) {
+            console.error("JS Error: during Telegram WebApp initialization:", e);
+            if (manualSaveButton) manualSaveButton.style.display = 'block';
+            if (customMainButtonContainer) customMainButtonContainer.style.display = 'none';
+        }
+        
+        if (isTgWebApp && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
+           try {
+               console.log("JS: Start param found:", tg.initDataUnsafe.start_param);
+               const initialData = JSON.parse(decodeURIComponent(tg.initDataUnsafe.start_param));
+               console.log("JS: Parsed initial data for prefill:", initialData);
+               indicatorGroups.forEach(group => {
+                   group.indicators.forEach(({ key }) => {
+                        if (initialData[key] !== undefined) {
+                            const inputElement = document.querySelector(`[name="${key}"]`);
+                            if (inputElement) {
+                                inputElement.value = initialData[key];
+                                console.log(`JS: Prefilled field '${key}' with '${initialData[key]}'`);
+                            }
+                        }
+                   });
+               });
+               updateMainButtonState();
+               tg.MainButton.setText("Обновить и отправить данные");
+           } catch (e) { 
+               console.error("JS Error: parsing or applying start_param data:", e); 
+               if(isTgWebApp) tg.showAlert("Не удалось загрузить данные для редактирования: " + e.message);
+           }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', initializeApp);
+  </script>
+</body>
+</html>

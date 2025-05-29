@@ -1,0 +1,22 @@
+{
+    "user_id": 1276743337,
+    "username": "a13x3Yg",
+    "first_name": "4leksey",
+    "last_name": "Gorohovv",
+    "registration_data": {
+        "gender": "male",
+        "age": 56,
+        "weight": 56.0,
+        "height": 167,
+        "medical_history_list": [
+            "none"
+        ],
+        "habits_list": [
+            "none"
+        ],
+        "diet_list": [
+            "none"
+        ],
+        "sleep_pattern": "8 часов"
+    }
+}
